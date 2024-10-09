@@ -3,6 +3,8 @@
  *
  *  Created on: 8 Oct 2024
  *      Author: Peiwand
+ *
+ *  Represents a single XML element
  */
 
 #ifndef XMLELEMENT_H_

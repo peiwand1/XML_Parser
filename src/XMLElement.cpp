@@ -1,5 +1,5 @@
 /*
- * XMLObj.cpp
+ * XMLElement.cpp
  *
  *  Created on: 8 Oct 2024
  *      Author: Peiwand

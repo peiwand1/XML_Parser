@@ -31,6 +31,8 @@ private:
 	 * once it's closing tag is found it is removed from the list
 	 */
 	std::list<XMLElement*> parentOrder;
+
+	bool parseByChar(char c, bool &tagOpened, std::string &tagContent);
 };
 
 #endif /* XMLPARSER_H_ */

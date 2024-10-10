@@ -6,6 +6,7 @@
  */
 
 #include "XMLElement.h"
+#include <iostream>
 
 XMLElement::XMLElement(std::string aName) :
 				name(aName),
@@ -17,6 +18,7 @@ XMLElement::XMLElement(std::string aName) :
 				children()
 {
 	// TODO Auto-generated constructor stub
+	std::cout << __PRETTY_FUNCTION__ << std::endl;
 
 }
 

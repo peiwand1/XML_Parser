@@ -12,4 +12,6 @@ int main(int argc, char **argv)
 {
 	XMLParser parser;
 	parser.parse("XML.txt");
+
+	parser.print();
 }

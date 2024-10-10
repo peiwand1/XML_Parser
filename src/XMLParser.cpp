@@ -9,10 +9,11 @@
 #include <list>
 #include <iostream>
 #include <fstream>
+#include <algorithm>
 
-XMLParser::XMLParser()
+XMLParser::XMLParser() :
+		doc(), parentOrder()
 {
-	// TODO Auto-generated constructor stub
 
 }
 
@@ -53,13 +54,17 @@ bool XMLParser::parseByChar(char c, bool &tagOpened, std::string &tagContent)
 	{
 		if (c == '<') // start of tag found
 		{
+//			parentOrder.back()->setTextContent(tagContent);
+
 			tagOpened = true;
+			tagContent = "";
 			std::cout << "< found, reading tag..." << std::endl;
 		}
 		else
 		{
-			// TODO also look for text between open and close tags,
-			// make sure not to store unneeded whitespace
+			// look for text between open and close tags,
+			// TODO make sure not to store unneeded whitespace
+			tagContent += c;
 		}
 	}
 	else
@@ -68,23 +73,12 @@ bool XMLParser::parseByChar(char c, bool &tagOpened, std::string &tagContent)
 		{
 			tagOpened = false;
 			std::cout << tagContent << std::endl;
-			std::cout << "> found, closing tag." << std::endl << std::endl;
-			// TODO make XMLElement object and set the found text as name/attributes
+			std::cout << "> found, analysing tag." << std::endl << std::endl;
+
+			handleXMLCreation(tagContent);
 			// reset tagName
 			tagContent = "";
 		}
-		else if (c == '/')
-		{
-			// if next char is > that means this is an empty tag
-			// if prev char is < that means this is a closing tag
-			// could maybe also differentiate by checking if tag name
-			// is before or after it
-		}
-		/*else if (c == ' ')
-		 {
-		 // likely indicating an attribute is about to show,
-		 // could also indicate an empty tag if next char is / but the space isn't required there
-		 }*/
 		else
 		{
 			// TODO implement checking for attributes, currently they are treated as part of the name
@@ -93,3 +87,75 @@ bool XMLParser::parseByChar(char c, bool &tagOpened, std::string &tagContent)
 	}
 	return tagOpened;
 }
+
+void XMLParser::handleXMLCreation(const std::string &tagContent)
+{
+	if (tagContent.front() == '/') // closing tag </name>
+	{
+		// check if name matches that of latest parent in order
+		// pop back if same
+		// throw exception otherwise
+		parentOrder.pop_back();
+		return;
+	}
+	else if (tagContent.back() == '/') // empty tag <name />
+	{
+		//remove / at end along with any trailing spaces
+		std::string str = tagContent;
+		str.pop_back();
+		std::string::iterator end_pos = std::remove(str.begin(), str.end(),
+				' ');
+		str.erase(end_pos, str.end());
+		parentOrder.push_back(new XMLElement(str));
+
+		// TODO figure out a good way to handle this, can't pop it until functions at end are executed
+		// will have to pop it at some point after that to maintain proper tree
+		// parentOrder.pop_back();
+	}
+	else // opening tag, so create an html element
+	{
+		// TODO make XMLElement object and set the found text as name/attributes
+		parentOrder.push_back(new XMLElement(tagContent));
+	}
+
+	setParentChildRelations();
+	setAttributes(tagContent);
+
+	setDocumentRoot();
+}
+
+void XMLParser::setParentChildRelations()
+{
+	if (parentOrder.size() > 1)
+	{
+		XMLElement *parent = parentOrder.at(parentOrder.size() - 2);
+		XMLElement *child = parentOrder.back();
+
+		parent->addChild(child);
+		child->setParent(parent);
+	}
+}
+
+void XMLParser::setAttributes(const std::string &tagContent)
+{
+	// TODO
+	// break up string into components
+	// will always contain name
+	// if no spaces you can be sure there are no attributes
+	// if spaces there could be an arbitrary amount of attributes
+	// it is also possible that the space only implies an empty tag
+}
+
+void XMLParser::setDocumentRoot()
+{
+	if (doc.getRoot() == nullptr) // will only happen when the first XML element is found
+	{
+		doc.setRoot(parentOrder.front());
+	}
+}
+
+void XMLParser::print()
+{
+	doc.printTree();
+}
+

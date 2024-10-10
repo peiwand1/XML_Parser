@@ -13,7 +13,7 @@
 #include "XMLDocument.h"
 #include "XMLElement.h"
 #include <string>
-#include <list>
+#include <vector>
 
 class XMLParser
 {
@@ -30,9 +30,13 @@ private:
 	 * keeps track of order that XML objects are found in,
 	 * once it's closing tag is found it is removed from the list
 	 */
-	std::list<XMLElement*> parentOrder;
+	std::vector<XMLElement*> parentOrder;
 
 	bool parseByChar(char c, bool &tagOpened, std::string &tagContent);
+	void handleXMLCreation(const std::string &tagContent);
+	void setParentChildRelations();
+	void setAttributes(const std::string &tagContent);
+	void setDocumentRoot();
 };
 
 #endif /* XMLPARSER_H_ */

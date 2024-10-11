@@ -16,7 +16,7 @@ XMLElement::XMLElement(std::string aName) :
 				children()
 {
 	// TODO Auto-generated constructor stub
-	std::cout << __PRETTY_FUNCTION__ << " " << name << std::endl;
+//	std::cout << __PRETTY_FUNCTION__ << " " << name << std::endl;
 
 }
 
@@ -78,7 +78,7 @@ XMLElement* XMLElement::getParent() const
 
 void XMLElement::setParent(XMLElement *aParent)
 {
-	std::cout << "setting " << aParent->getName() << " as parent of " << name << std::endl;
+//	std::cout << "setting " << aParent->getName() << " as parent of " << name << std::endl;
 	parent = aParent;
 }
 
@@ -89,7 +89,7 @@ const std::vector<XMLElement*>& XMLElement::getChildren() const
 
 void XMLElement::addChild(XMLElement *aChild)
 {
-	std::cout << "adding " << aChild->getName() << " as child of " << name << std::endl;
+//	std::cout << "adding " << aChild->getName() << " as child of " << name << std::endl;
 	children.push_back(aChild);
 }
 

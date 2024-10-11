@@ -14,6 +14,7 @@
 #include "XMLElement.h"
 #include <string>
 #include <vector>
+#include <list>
 
 class XMLParser
 {
@@ -37,6 +38,8 @@ private:
 	void setParentChildRelations();
 	void setAttributes(const std::string &tagContent);
 	void setDocumentRoot();
+	std::list<std::string> splitString(const std::string &tagContent,
+			char delimiter);
 };
 
 #endif /* XMLPARSER_H_ */

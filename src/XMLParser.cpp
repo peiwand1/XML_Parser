@@ -10,6 +10,7 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
+#include <sstream>
 
 XMLParser::XMLParser() :
 		doc(), parentOrder()
@@ -54,11 +55,11 @@ bool XMLParser::parseByChar(char c, bool &tagOpened, std::string &tagContent)
 	{
 		if (c == '<') // start of tag found
 		{
-//			parentOrder.back()->setTextContent(tagContent);
+//			parentOrder.back()->setTextContent(tagContent); // TODO put this in the correct spot
 
 			tagOpened = true;
 			tagContent = "";
-			std::cout << "< found, reading tag..." << std::endl;
+//			std::cout << "< found, reading tag..." << std::endl;
 		}
 		else
 		{
@@ -72,8 +73,8 @@ bool XMLParser::parseByChar(char c, bool &tagOpened, std::string &tagContent)
 		if (c == '>')
 		{
 			tagOpened = false;
-			std::cout << tagContent << std::endl;
-			std::cout << "> found, analysing tag." << std::endl << std::endl;
+//			std::cout << tagContent << std::endl;
+//			std::cout << "> found, analysing tag." << std::endl << std::endl;
 
 			handleXMLCreation(tagContent);
 			// reset tagName
@@ -98,15 +99,12 @@ void XMLParser::handleXMLCreation(const std::string &tagContent)
 		parentOrder.pop_back();
 		return;
 	}
-	else if (tagContent.back() == '/') // empty tag <name />
+
+	std::list<std::string> strl = splitString(tagContent, ' ');
+
+	if (tagContent.back() == '/') // empty tag <name />
 	{
-		//remove / at end along with any trailing spaces
-		std::string str = tagContent;
-		str.pop_back();
-		std::string::iterator end_pos = std::remove(str.begin(), str.end(),
-				' ');
-		str.erase(end_pos, str.end());
-		parentOrder.push_back(new XMLElement(str));
+		parentOrder.push_back(new XMLElement(strl.front()));
 
 		// TODO figure out a good way to handle this, can't pop it until functions at end are executed
 		// will have to pop it at some point after that to maintain proper tree
@@ -114,8 +112,7 @@ void XMLParser::handleXMLCreation(const std::string &tagContent)
 	}
 	else // opening tag, so create an html element
 	{
-		// TODO make XMLElement object and set the found text as name/attributes
-		parentOrder.push_back(new XMLElement(tagContent));
+		parentOrder.push_back(new XMLElement(strl.front()));
 	}
 
 	setParentChildRelations();
@@ -136,14 +133,48 @@ void XMLParser::setParentChildRelations()
 	}
 }
 
-void XMLParser::setAttributes(const std::string &tagContent)
+std::list<std::string> XMLParser::splitString(const std::string &str,
+		char delimiter)
 {
-	// TODO
-	// break up string into components
-	// will always contain name
+	std::stringstream ss(str);
+	std::string token;
+	std::list<std::string> tokens;
+	while (getline(ss, token, delimiter))
+	{
+		tokens.push_back(token);
+	}
+	return tokens;
+}
+
+void XMLParser::setAttributes(const std::string &str)
+{
+//	std::cout << __PRETTY_FUNCTION__ << " " << str << std::endl;
+
 	// if no spaces you can be sure there are no attributes
-	// if spaces there could be an arbitrary amount of attributes
-	// it is also possible that the space only implies an empty tag
+	if (str.find(' ') == std::string::npos)
+		return;
+
+	// split str on spaces. will always contain element name, so remove that
+	std::list<std::string> strl = splitString(str, ' ');
+	strl.pop_front();
+
+	// if 0, no attributes exist
+	// if 1 and that 1 is "/", no attributes exist
+	if (strl.size() == 0 || (strl.size() == 1 && strl.back() == "/"))
+		return;
+
+	// for each token, split into key value pair and add attribute
+	for (std::string s : strl)
+	{
+		if (str.find('=') == std::string::npos)
+			continue;
+//		std::cout << s << std::endl;
+		// TODO this currently won't work as intended if there is a '=' in the value
+		std::list<std::string> tokens = splitString(s, '=');
+		std::string val = tokens.back();
+		val = val.substr(1, val.size() - 2);
+		parentOrder.back()->addAttribute(tokens.front(), val);
+	}
 }
 
 void XMLParser::setDocumentRoot()

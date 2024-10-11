@@ -1,6 +1,6 @@
 <note><to>Tove</to>
   <from>Jani</from>
   <heading>Reminder</heading>
-  <body color="purple"><text><test>Don't forget me this weekend!</test></text></body>
+  <body color="purple" taste="sour"><text><test>Don't forget me this weekend!</test></text></body>
   <empty />
 </note>

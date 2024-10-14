@@ -13,14 +13,13 @@
 #include <sstream>
 
 XMLParser::XMLParser() :
-		doc(), parentOrder(), isInsideElement(false)
+		doc(), parentOrder(), isInsideElement(false), readStr("")
 {
 
 }
 
 XMLParser::~XMLParser()
 {
-	// TODO Auto-generated destructor stub
 }
 
 void XMLParser::parse(std::string fileName)
@@ -31,12 +30,12 @@ void XMLParser::parse(std::string fileName)
 	if (file.is_open())
 	{
 		char c;
-		std::string tagContent = "";
+		std::string readStr = "";
 
 		while (file.get(c))
 		{
 			//read char by char to determine what it is
-			parseByChar(c, tagContent);
+			parseByChar(c);
 		}
 
 		file.close();
@@ -47,7 +46,7 @@ void XMLParser::parse(std::string fileName)
 	}
 }
 
-void XMLParser::parseByChar(char c, std::string &tagContent)
+void XMLParser::parseByChar(char c)
 {
 	//read char by char to determine what it is
 	if (!isInsideElement)
@@ -56,20 +55,18 @@ void XMLParser::parseByChar(char c, std::string &tagContent)
 		{
 			//check if the root xml element has been made and the read text isn't just whitespace
 			if (parentOrder.size() > 0
-					&& tagContent.find_first_not_of(" \t\n\v\f\r")
-							!= std::string::npos)
+					&& !std::all_of(readStr.begin(), readStr.end(), isspace))
 			{
-//				std::cout << "test: " << tagContent << "." << std::endl;
-				parentOrder.back()->setTextContent(tagContent); // TODO put this in the correct spot
+				// TODO replace line endings with LF (omit CR if it's there)
+				parentOrder.back()->setTextContent(readStr);
 			}
 			isInsideElement = true;
-			tagContent = "";
-//			std::cout << "< found, reading tag..." << std::endl;
+			readStr = "";
 		}
 		else
 		{
 			// look for text between open and close tags,
-			tagContent += c;
+			readStr += c;
 		}
 	}
 	else
@@ -77,62 +74,116 @@ void XMLParser::parseByChar(char c, std::string &tagContent)
 		if (c == '>')
 		{
 			isInsideElement = false;
-//			std::cout << tagContent << std::endl;
-//			std::cout << "> found, analysing tag." << std::endl << std::endl;
 
-			handleXMLCreation(tagContent);
+			handleXMLInside();
 			// reset tagName
-			tagContent = "";
+			readStr = "";
 		}
 		else
 		{
-			// TODO implement checking for attributes, currently they are treated as part of the name
-			tagContent += c;
+			// read text that is between < > brackets
+			readStr += c;
 		}
 	}
 }
 
-void XMLParser::handleXMLCreation(const std::string &tagContent)
+void XMLParser::handleClosingTag()
 {
-	if (tagContent.front() == '/') // closing tag </name>
+	if (readStr.substr(1, readStr.size() - 1) == parentOrder.back()->getName())
 	{
 		// check if name matches that of latest parent in order
 		// pop back if same
 		// throw exception otherwise
 		parentOrder.pop_back();
+	}
+	else
+	{
+		// TODO throw exception, closing tag had different name than opening tag
+		//throw "Closing tag '" + parentOrder.back()->getName() + "' expected inplace of '" + readStr.substr(1, readStr.size()-1) + "'";
+	}
+}
+
+void XMLParser::handleMetaData()
+{
+	// Ex: <?xml version="1.0" encoding="UTF-8"?>
+	if (readStr.substr(0, 4) == "?xml" && readStr.back() == '?')
+	{
+		// set version and encoding
+		std::string attrStr = readStr.substr(5);
+		std::map<std::string, std::string> attributes =
+				extractAttrKeyValuePairs(attrStr);
+
+		std::cout << attributes.at("version") << std::endl;
+		std::cout << attributes.at("encoding") << std::endl;
+
+		auto pos = attributes.find("version");
+		if (pos != attributes.end())
+		{
+			doc.setVersion(attributes.at("version"));
+		}
+
+		pos = attributes.find("encoding");
+		if (pos != attributes.end())
+		{
+			doc.setVersion(attributes.at("encoding"));
+		}
+//		std::cout << attr << std::endl;
+	}
+	else
+	{
+		// TODO throw exception, formatting wrong
+	}
+}
+
+void XMLParser::handleXMLInside()
+{
+	if (readStr.front() == '/') // closing tag </name>
+	{
+		handleClosingTag();
+		return;
+	}
+	else if (readStr.front() == '?') // prolog
+	{
+		handleMetaData();
+		return;
+	}
+	else if (readStr.front() == '!') // comment
+	{
+		// TODO check if comment syntax is accurate
 		return;
 	}
 
-	std::list<std::string> strl = splitString(tagContent, ' ');
-
-	if (tagContent.back() == '/') // empty tag <name />
+	// isolate element name from string
+	std::string name = readStr;
+	std::string attr = "";
+	auto pos = readStr.find(' ');
+	if (pos != std::string::npos)
 	{
-		parentOrder.push_back(new XMLElement(strl.front()));
-
-		setParentChildRelations();
-		setAttributes(tagContent);
-
-		setDocumentRoot();
-		parentOrder.pop_back();
-	}
-	else // opening tag, so create an html element
-	{
-		parentOrder.push_back(new XMLElement(strl.front()));
-
-		setParentChildRelations();
-		setAttributes(tagContent);
-
-		setDocumentRoot();
+		name = readStr.substr(0, pos);
+		attr = readStr.substr(pos + 1); // +1 to skip the space char
 	}
 
+	parentOrder.push_back(new XMLElement(name));
+
+	setParentChildRelations();
+	if (attr.size() > 0)
+	{
+		setAttributes(attr);
+	}
+	setDocumentRoot();
+
+	if (readStr.back() == '/')
+	{
+		parentOrder.pop_back(); // empty tag <name />
+	}
 }
 
 void XMLParser::setParentChildRelations()
 {
 	if (parentOrder.size() > 1)
 	{
-		XMLElement *parent = parentOrder.at(parentOrder.size() - 2);
-		XMLElement *child = parentOrder.back();
+		XMLElement *parent = parentOrder.at(parentOrder.size() - 2); // second to last item
+		XMLElement *child = parentOrder.back(); // last item
 
 		parent->addChild(child);
 		child->setParent(parent);
@@ -154,32 +205,16 @@ std::list<std::string> XMLParser::splitString(const std::string &str,
 
 void XMLParser::setAttributes(const std::string &str)
 {
-//	std::cout << __PRETTY_FUNCTION__ << " " << str << std::endl;
-
-	// if no spaces you can be sure there are no attributes
-	if (str.find(' ') == std::string::npos)
+	// if no equals sign, there are no attributes
+	if (str.find('=') == std::string::npos)
 		return;
 
-	// split str on spaces. will always contain element name, so remove that
-	std::list<std::string> strl = splitString(str, ' ');
-	strl.pop_front();
+	std::map<std::string, std::string> attributes = extractAttrKeyValuePairs(
+			str);
 
-	// if 0, no attributes exist
-	// if 1 and that 1 is "/", no attributes exist
-	if (strl.size() == 0 || (strl.size() == 1 && strl.back() == "/"))
-		return;
-
-	// for each token, split into key value pair and add attribute
-	for (std::string s : strl)
+	for (const auto &kv : attributes)
 	{
-		if (str.find('=') == std::string::npos)
-			continue;
-//		std::cout << s << std::endl;
-		// TODO this currently won't work as intended if there is a '=' in the value
-		std::list<std::string> tokens = splitString(s, '=');
-		std::string val = tokens.back();
-		val = val.substr(1, val.size() - 2);
-		parentOrder.back()->addAttribute(tokens.front(), val);
+		parentOrder.back()->addAttribute(kv.first, kv.second);
 	}
 }
 
@@ -189,6 +224,72 @@ void XMLParser::setDocumentRoot()
 	{
 		doc.setRoot(parentOrder.front());
 	}
+}
+
+std::map<std::string, std::string> XMLParser::extractAttrKeyValuePairs(
+		const std::string &str)
+{
+	std::map<std::string, std::string> attributes;
+	std::string attrName, attrValue;
+	bool inName = true, inValue = false, insideQuotes = false;
+	char quoteChar = '\0';
+
+	for (std::size_t i = 0; i < str.size(); ++i)
+	{
+		char c = str[i];
+		// ignore leading spaces
+		if (std::isspace(c) && !inValue && !insideQuotes)
+		{
+			continue;
+		}
+		if (inName)
+		{
+			if (c == '=')
+			{
+				// end of attribute name
+				inName = false;
+				inValue = true;
+				continue;
+			}
+			else
+			{
+				attrName += c;
+			}
+		}
+		else if (inValue)
+		{
+			if (!insideQuotes)
+			{
+				// first quote encountered, can be " or ', remember this for closing the quote
+				if (c == '"' || c == '\'')
+				{
+					insideQuotes = true;
+					quoteChar = c;
+				}
+			}
+			else
+			{
+				// End quote found
+				if (c == quoteChar)
+				{
+					insideQuotes = false;
+					inValue = false;
+
+					// store the attribute name and value
+					attributes[attrName] = attrValue;
+
+					attrName = "";
+					attrValue = "";
+					inName = true; // expect another attribute name next
+				}
+				else
+				{
+					attrValue += c;
+				}
+			}
+		}
+	}
+	return attributes;
 }
 
 void XMLParser::print()

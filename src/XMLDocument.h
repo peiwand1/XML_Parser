@@ -21,11 +21,16 @@ public:
 
 	const XMLElement* getRoot() const;
 	void setRoot(XMLElement *aRoot);
+	const std::string& getVersion() const;
+	void setVersion(const std::string &version);
+	const std::string& getEncoding() const;
+	void setEncoding(const std::string &encoding);
 
 	/**
 	 * prints the entire XML tree to console starting from root
 	 */
 	void printTree();
+
 private:
 	std::string version;
 	std::string encoding;

@@ -11,7 +11,13 @@
 int main(int argc, char **argv)
 {
 	XMLParser parser;
-	parser.parse("XML.txt");
 
+	try
+	{
+		parser.parse("XML.txt");
+	} catch (const std::exception& e)
+	{
+		std::cerr << e.what() << std::endl;
+	}
 	parser.print();
 }

@@ -1,7 +1,8 @@
+<?xml version= "1.0" encoding="UTF-8"?>
 <note><to>Tove</to>
   <from>Jani</from>
   <heading>Reminder</heading>
-  <body color="purple" taste="sour"><text><test>Don't forget me this weekend!</test></text></body>
+  <body color="purple" size="large"><text><test>Don't forget me this weekend!</test></text></body>
   textbefore
   <empty />
   textafter

@@ -34,14 +34,18 @@ private:
 	std::vector<XMLElement*> parentOrder;
 
 	bool isInsideElement;
+	std::string readStr;
 
-	void parseByChar(char c, std::string &tagContent);
-	void handleXMLCreation(const std::string &tagContent);
+	void parseByChar(char c);
+	void handleXMLInside();
 	void setParentChildRelations();
-	void setAttributes(const std::string &tagContent);
+	void setAttributes(const std::string &str);
 	void setDocumentRoot();
-	std::list<std::string> splitString(const std::string &tagContent,
-			char delimiter);
+	void handleClosingTag();
+	void handleMetaData();
+	std::list<std::string> splitString(const std::string &str, char delimiter);
+	std::map<std::string, std::string> extractAttrKeyValuePairs(
+			const std::string &str);
 };
 
 #endif /* XMLPARSER_H_ */

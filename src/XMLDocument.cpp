@@ -30,8 +30,28 @@ void XMLDocument::setRoot(XMLElement *aRoot)
 	root = aRoot;
 }
 
+const std::string& XMLDocument::getEncoding() const
+{
+	return encoding;
+}
+void XMLDocument::setEncoding(const std::string &anEncoding)
+{
+	encoding = anEncoding;
+}
+
+const std::string& XMLDocument::getVersion() const
+{
+	return version;
+}
+
+void XMLDocument::setVersion(const std::string &aVersion)
+{
+	version = aVersion;
+}
+
 void XMLDocument::printTree()
 {
+	std::cout << "<?xml version=\"" << version << "\" encoding=\"" << encoding << "\"?>" << std::endl;
 	printElement(root);
 }
 
@@ -41,6 +61,7 @@ void XMLDocument::printElement(XMLElement *anElement, unsigned int depth)
 	std::string spaces(depth * 2, ' ');
 	std::string attrStr = "";
 
+	// prepare string of attribute data
 	std::map<std::string, std::string> attr = anElement->getAttributes();
 	if (attr.size() > 0)
 	{

@@ -91,7 +91,7 @@
                 <mxCell id="44" value="See xml element close tag" style="rhombus;whiteSpace=wrap;html=1;rounded=1;arcSize=0;" parent="1" vertex="1">
                     <mxGeometry x="425" y="520" width="80" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="50" value="" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=#ff0000;" parent="1" vertex="1">
+                <mxCell id="50" value="" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=default;" parent="1" vertex="1">
                     <mxGeometry x="450" y="730" width="30" height="30" as="geometry"/>
                 </mxCell>
             </root>

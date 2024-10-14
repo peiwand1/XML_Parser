@@ -2,5 +2,7 @@
   <from>Jani</from>
   <heading>Reminder</heading>
   <body color="purple" taste="sour"><text><test>Don't forget me this weekend!</test></text></body>
+  textbefore
   <empty />
+  textafter
 </note>

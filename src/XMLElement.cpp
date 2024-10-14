@@ -9,11 +9,7 @@
 #include <iostream>
 
 XMLElement::XMLElement(std::string aName) :
-				name(aName),
-				textContent(""),
-				attributes(),
-				parent(nullptr),
-				children()
+		name(aName), textContent(""), attributes(), parent(nullptr), children()
 {
 	// TODO Auto-generated constructor stub
 //	std::cout << __PRETTY_FUNCTION__ << " " << name << std::endl;
@@ -41,7 +37,7 @@ const std::string& XMLElement::getName() const
 	return name;
 }
 
-void XMLElement::setName(const std::string& aName)
+void XMLElement::setName(const std::string &aName)
 {
 	name = aName;
 }
@@ -51,9 +47,16 @@ const std::string& XMLElement::getTextContent() const
 	return textContent;
 }
 
-void XMLElement::setTextContent(const std::string& aTextContent)
+void XMLElement::setTextContent(const std::string &aTextContent)
 {
-	textContent = aTextContent;
+	if (textContent.size() > 0)
+	{
+		textContent = textContent + " " + aTextContent;
+	}
+	else
+	{
+		textContent = aTextContent;
+	}
 }
 
 const std::map<std::string, std::string>& XMLElement::getAttributes() const
@@ -61,14 +64,17 @@ const std::map<std::string, std::string>& XMLElement::getAttributes() const
 	return attributes;
 }
 
-const std::string& XMLElement::getAttribute(const std::string& anAttributeKey) const
+const std::string& XMLElement::getAttribute(
+		const std::string &anAttributeKey) const
 {
 	return attributes.at(anAttributeKey);
 }
 
-void XMLElement::addAttribute(const std::string& aKey, const std::string& aValue)
+void XMLElement::addAttribute(const std::string &aKey,
+		const std::string &aValue)
 {
-	attributes.insert({aKey, aValue});
+	attributes.insert(
+	{ aKey, aValue });
 }
 
 XMLElement* XMLElement::getParent() const

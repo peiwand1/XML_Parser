@@ -33,7 +33,9 @@ private:
 	 */
 	std::vector<XMLElement*> parentOrder;
 
-	bool parseByChar(char c, bool &tagOpened, std::string &tagContent);
+	bool isInsideElement;
+
+	void parseByChar(char c, std::string &tagContent);
 	void handleXMLCreation(const std::string &tagContent);
 	void setParentChildRelations();
 	void setAttributes(const std::string &tagContent);

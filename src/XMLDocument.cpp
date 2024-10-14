@@ -32,7 +32,7 @@ void XMLDocument::setRoot(XMLElement *aRoot)
 
 void XMLDocument::printTree()
 {
-	printElement(root, 0);
+	printElement(root);
 }
 
 void XMLDocument::printElement(XMLElement *anElement, unsigned int depth)

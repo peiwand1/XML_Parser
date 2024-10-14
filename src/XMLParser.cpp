@@ -13,7 +13,7 @@
 #include <sstream>
 
 XMLParser::XMLParser() :
-		doc(), parentOrder()
+		doc(), parentOrder(), isInsideElement(false)
 {
 
 }
@@ -32,12 +32,11 @@ void XMLParser::parse(std::string fileName)
 	{
 		char c;
 		std::string tagContent = "";
-		bool tagOpened = false;
 
 		while (file.get(c))
 		{
 			//read char by char to determine what it is
-			parseByChar(c, tagOpened, tagContent);
+			parseByChar(c, tagContent);
 		}
 
 		file.close();
@@ -48,23 +47,28 @@ void XMLParser::parse(std::string fileName)
 	}
 }
 
-bool XMLParser::parseByChar(char c, bool &tagOpened, std::string &tagContent)
+void XMLParser::parseByChar(char c, std::string &tagContent)
 {
 	//read char by char to determine what it is
-	if (!tagOpened)
+	if (!isInsideElement)
 	{
 		if (c == '<') // start of tag found
 		{
-//			parentOrder.back()->setTextContent(tagContent); // TODO put this in the correct spot
-
-			tagOpened = true;
+			//check if the root xml element has been made and the read text isn't just whitespace
+			if (parentOrder.size() > 0
+					&& tagContent.find_first_not_of(" \t\n\v\f\r")
+							!= std::string::npos)
+			{
+//				std::cout << "test: " << tagContent << "." << std::endl;
+				parentOrder.back()->setTextContent(tagContent); // TODO put this in the correct spot
+			}
+			isInsideElement = true;
 			tagContent = "";
 //			std::cout << "< found, reading tag..." << std::endl;
 		}
 		else
 		{
 			// look for text between open and close tags,
-			// TODO make sure not to store unneeded whitespace
 			tagContent += c;
 		}
 	}
@@ -72,7 +76,7 @@ bool XMLParser::parseByChar(char c, bool &tagOpened, std::string &tagContent)
 	{
 		if (c == '>')
 		{
-			tagOpened = false;
+			isInsideElement = false;
 //			std::cout << tagContent << std::endl;
 //			std::cout << "> found, analysing tag." << std::endl << std::endl;
 
@@ -86,7 +90,6 @@ bool XMLParser::parseByChar(char c, bool &tagOpened, std::string &tagContent)
 			tagContent += c;
 		}
 	}
-	return tagOpened;
 }
 
 void XMLParser::handleXMLCreation(const std::string &tagContent)
@@ -106,19 +109,22 @@ void XMLParser::handleXMLCreation(const std::string &tagContent)
 	{
 		parentOrder.push_back(new XMLElement(strl.front()));
 
-		// TODO figure out a good way to handle this, can't pop it until functions at end are executed
-		// will have to pop it at some point after that to maintain proper tree
-		// parentOrder.pop_back();
+		setParentChildRelations();
+		setAttributes(tagContent);
+
+		setDocumentRoot();
+		parentOrder.pop_back();
 	}
 	else // opening tag, so create an html element
 	{
 		parentOrder.push_back(new XMLElement(strl.front()));
+
+		setParentChildRelations();
+		setAttributes(tagContent);
+
+		setDocumentRoot();
 	}
 
-	setParentChildRelations();
-	setAttributes(tagContent);
-
-	setDocumentRoot();
 }
 
 void XMLParser::setParentChildRelations()

@@ -20,7 +20,7 @@ public:
 	virtual ~XMLDocument();
 
 	const XMLElement* getRoot() const;
-	void setRoot(XMLElement* aRoot);
+	void setRoot(XMLElement *aRoot);
 
 	/**
 	 * prints the entire XML tree to console starting from root
@@ -29,14 +29,14 @@ public:
 private:
 	std::string version;
 	std::string encoding;
-	XMLElement* root;
+	XMLElement *root;
 
 	/**
 	 * recursively prints XML elements and their children
 	 * @param anElement
 	 * @param depth, used for indentation
 	 */
-	void printElement(XMLElement* anElement, unsigned int depth);
+	void printElement(XMLElement *anElement, unsigned int depth = 0);
 };
 
 #endif /* XMLDOCUMENT_H_ */

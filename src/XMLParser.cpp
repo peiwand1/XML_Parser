@@ -30,7 +30,7 @@ void XMLParser::parse(const std::string &fileName, std::size_t bufferSize)
 		throw std::runtime_error("Unable to open file: " + fileName);
 	}
 
-	// read a buffer of chars from file
+	// read a buffer of chars from file, do this until whole file is read
 	std::vector<char> buffer(bufferSize);
 	while (file.read(buffer.data(), bufferSize))
 	{
@@ -38,7 +38,7 @@ void XMLParser::parse(const std::string &fileName, std::size_t bufferSize)
 		processChunk(std::string(buffer.data(), bytesRead));
 	}
 
-	// Process any remaining data (if less than bufferSize was read)
+	// process any remaining data (if less than bufferSize was read)
 	if (file.gcount() > 0)
 	{
 		processChunk(std::string(buffer.data(), file.gcount()));
@@ -50,7 +50,7 @@ void XMLParser::parse(const std::string &fileName, std::size_t bufferSize)
 void XMLParser::processChunk(const std::string &buffer)
 {
 	// read through buffer by char
-	for (const char& c: buffer)
+	for (const char &c : buffer)
 	{
 		parseByChar(c);
 	}
@@ -120,7 +120,6 @@ void XMLParser::handleXMLInside()
 	}
 	else
 	{
-
 		handleXMLElement();
 	}
 }
@@ -202,7 +201,7 @@ void XMLParser::handleComment()
 	}
 	else
 	{
-		// TODO throw exception, formatting wrong
+		// throw exception, formatting wrong
 		throw std::runtime_error("Comment not formatted correctly");
 	}
 }

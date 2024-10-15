@@ -4,7 +4,7 @@
  *  Created on: 9 Oct 2024
  *      Author: Peiwand
  *
- *
+ *  Class for parsing any given XML document
  */
 
 #ifndef XMLPARSER_H_

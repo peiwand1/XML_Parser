@@ -35,7 +35,6 @@ XMLElement::XMLElement(XMLElement &&other) :
 
 XMLElement::~XMLElement()
 {
-	// TODO Auto-generated destructor stub
 }
 
 const std::string& XMLElement::getName() const

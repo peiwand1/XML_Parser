@@ -36,7 +36,6 @@ public:
 	XMLElement(XMLElement &&anXMLObj);
 
 	virtual ~XMLElement();
-	//TODO add move constructor and -assignment operator
 
 	const std::string& getName() const;
 	void setName(const std::string &aName);

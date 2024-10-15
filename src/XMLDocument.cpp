@@ -11,13 +11,10 @@
 XMLDocument::XMLDocument() :
 		version(""), encoding(""), root(nullptr)
 {
-	// TODO Auto-generated constructor stub
-
 }
 
 XMLDocument::~XMLDocument()
 {
-	// TODO Auto-generated destructor stub
 }
 
 const XMLElement* XMLDocument::getRoot() const

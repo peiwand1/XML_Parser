@@ -48,6 +48,7 @@ void XMLDocument::setVersion(const std::string &aVersion)
 
 void XMLDocument::printTree()
 {
+	// if at least 1 of these values is set, print the existing ones
 	if (version != "" || encoding != "")
 	{
 		std::cout << "<?xml ";
@@ -62,6 +63,7 @@ void XMLDocument::printTree()
 		std::cout << "?>" << std::endl;
 	}
 
+	//print the XML tree only if there is a root element
 	if (root != nullptr)
 	{
 		printElement(root);
@@ -74,7 +76,7 @@ void XMLDocument::printElement(XMLElement *anElement, unsigned int depth)
 	std::string spaces(depth * 2, ' ');
 	std::string attrStr = "";
 
-// prepare string of attribute data
+	// prepare string of attribute data
 	std::map<std::string, std::string> attr = anElement->getAttributes();
 	if (attr.size() > 0)
 	{
@@ -84,8 +86,8 @@ void XMLDocument::printElement(XMLElement *anElement, unsigned int depth)
 		}
 	}
 
-// if no children and no text content, print empty tag
-// else print full tag
+	// if no children and no text content, print empty tag
+	// else print full tag
 	if (anElement->getChildren().size() == 0
 			&& anElement->getTextContent().empty())
 	{

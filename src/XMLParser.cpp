@@ -206,6 +206,32 @@ void XMLParser::handleComment()
 	}
 }
 
+void XMLParser::checkNameLegality(std::string &name)
+{
+	std::string illegalStartChars = "-.1234567890"; // chars that a name can't start with
+	auto pos = illegalStartChars.find(name.front());
+	if (pos != std::string::npos)
+	{
+		// first char is '-', '.' or a digit
+		throw std::runtime_error(
+				"name: " + name + " starts with an illegal character '"
+						+ illegalStartChars.at(pos) + "'");
+	}
+
+	std::string illegalNameChars = "!\"#$%&'()*+,/;<=>?@[\\]^`{|}~"; // chars that can't be used in name
+	for (char c : name)
+	{
+		pos = illegalNameChars.find(c);
+		if (pos != std::string::npos)
+		{
+			//contains illegal char
+			throw std::runtime_error(
+					"name: " + name + " contains an illegal character '"
+							+ illegalNameChars.at(pos) + "'");
+		}
+	}
+}
+
 void XMLParser::handleXMLElement()
 {
 	// separate element name from attributes
@@ -217,6 +243,7 @@ void XMLParser::handleXMLElement()
 		name = readStr.substr(0, pos);
 		attr = readStr.substr(pos + 1); // +1 to skip the space char
 	}
+	checkNameLegality(name);
 
 	parentOrder.push_back(new XMLElement(name));
 
@@ -275,7 +302,7 @@ std::map<std::string, std::string> XMLParser::extractAttrKeyValuePairs(
 	std::map<std::string, std::string> attributes;
 	std::string attrName, attrValue;
 	bool inName = true, inValue = false, insideQuotes = false;
-	char quoteChar = '\0';
+	char quoteChar = '\0'; // will be overwritten by the opening quote, either " or '
 
 	for (std::size_t i = 0; i < str.size(); ++i)
 	{
@@ -319,6 +346,7 @@ std::map<std::string, std::string> XMLParser::extractAttrKeyValuePairs(
 					inValue = false;
 
 					// store the attribute name and value
+					checkNameLegality(attrName);
 					attributes[attrName] = attrValue;
 
 					attrName = "";

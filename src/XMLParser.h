@@ -116,6 +116,12 @@ private:
 	 */
 	std::map<std::string, std::string> extractAttrKeyValuePairs(
 			const std::string &str);
+
+	/**
+	 * checks if a name contains any characters that are illegal in XML
+	 * @param name
+	 */
+	void checkNameLegality(std::string &name);
 };
 
 #endif /* XMLPARSER_H_ */

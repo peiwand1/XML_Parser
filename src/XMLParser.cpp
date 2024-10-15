@@ -41,7 +41,7 @@ void XMLParser::parse(const std::string &fileName)
 	}
 	else
 	{
-		std::cout << "Unable to open file" << std::endl;
+		throw std::runtime_error("Unable to open file");
 	}
 }
 

@@ -103,7 +103,7 @@ void XMLParser::handleXMLInside()
 {
 	if (std::isspace(readStr.front()))
 	{
-		throw std::runtime_error("XML Element can't start with whitespace");
+		throw std::runtime_error("XML Element can't start with whitespace: " + readStr);
 	}
 
 	if (readStr.front() == '/') // closing tag </name>
@@ -166,7 +166,7 @@ void XMLParser::handleMetaData()
 	else
 	{
 		// throw exception, formatting wrong
-		throw std::runtime_error("Metadata found, but syntax was wrong.");
+		throw std::runtime_error("Metadata found, but syntax was wrong: " + readStr);
 	}
 }
 
@@ -187,7 +187,7 @@ void XMLParser::handleComment()
 				// found 2 dashes in a row
 				// throw, can't have -- in comment
 				throw std::runtime_error(
-						"Double dashes found in comment, this is not allowed");
+						"Double dashes found in comment, this is not allowed: " + readStr);
 			}
 			else if (c == '-')
 			{
@@ -202,7 +202,7 @@ void XMLParser::handleComment()
 	else
 	{
 		// throw exception, formatting wrong
-		throw std::runtime_error("Comment not formatted correctly");
+		throw std::runtime_error("Comment not formatted correctly: " + readStr);
 	}
 }
 

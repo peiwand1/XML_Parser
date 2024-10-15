@@ -87,54 +87,6 @@ void XMLParser::parseByChar(char c)
 	}
 }
 
-void XMLParser::handleClosingTag()
-{
-	if (readStr.substr(1, readStr.size() - 1) == parentOrder.back()->getName())
-	{
-		// check if name matches that of latest parent in order
-		// pop back if same
-		// throw exception otherwise
-		parentOrder.pop_back();
-	}
-	else
-	{
-		// TODO throw exception, closing tag had different name than opening tag
-		//throw "Closing tag '" + parentOrder.back()->getName() + "' expected inplace of '" + readStr.substr(1, readStr.size()-1) + "'";
-	}
-}
-
-void XMLParser::handleMetaData()
-{
-	// Ex: <?xml version="1.0" encoding="UTF-8"?>
-	if (readStr.substr(0, 4) == "?xml" && readStr.back() == '?')
-	{
-		// set version and encoding
-		std::string attrStr = readStr.substr(5);
-		std::map<std::string, std::string> attributes =
-				extractAttrKeyValuePairs(attrStr);
-
-		std::cout << attributes.at("version") << std::endl;
-		std::cout << attributes.at("encoding") << std::endl;
-
-		auto pos = attributes.find("version");
-		if (pos != attributes.end())
-		{
-			doc.setVersion(attributes.at("version"));
-		}
-
-		pos = attributes.find("encoding");
-		if (pos != attributes.end())
-		{
-			doc.setVersion(attributes.at("encoding"));
-		}
-//		std::cout << attr << std::endl;
-	}
-	else
-	{
-		// TODO throw exception, formatting wrong
-	}
-}
-
 void XMLParser::handleXMLInside()
 {
 	if (readStr.front() == '/') // closing tag </name>
@@ -178,6 +130,51 @@ void XMLParser::handleXMLInside()
 	}
 }
 
+void XMLParser::handleClosingTag()
+{
+	// check if name matches that of latest parent in order
+	if (readStr.substr(1, readStr.size() - 1) == parentOrder.back()->getName())
+	{
+		parentOrder.pop_back();
+	}
+	else
+	{
+		// TODO throw exception, closing tag had different name than opening tag
+		//throw "Closing tag '" + parentOrder.back()->getName() + "' expected inplace of '" + readStr.substr(1, readStr.size()-1) + "'";
+	}
+}
+
+void XMLParser::handleMetaData()
+{
+	// check if tag starts and ends with correct symbols
+	if (readStr.substr(0, 4) == "?xml" && readStr.back() == '?')
+	{
+		// split "?xml " from string
+		std::string attrStr = readStr.substr(5);
+		std::map<std::string, std::string> attributes =
+				extractAttrKeyValuePairs(attrStr);
+
+//		std::cout << attributes.at("version") << std::endl;
+//		std::cout << attributes.at("encoding") << std::endl;
+
+		auto pos = attributes.find("version");
+		if (pos != attributes.end())
+		{
+			doc.setVersion(attributes.at("version"));
+		}
+
+		pos = attributes.find("encoding");
+		if (pos != attributes.end())
+		{
+			doc.setEncoding(attributes.at("encoding"));
+		}
+	}
+	else
+	{
+		// TODO throw exception, formatting wrong
+	}
+}
+
 void XMLParser::setParentChildRelations()
 {
 	if (parentOrder.size() > 1)
@@ -188,19 +185,6 @@ void XMLParser::setParentChildRelations()
 		parent->addChild(child);
 		child->setParent(parent);
 	}
-}
-
-std::list<std::string> XMLParser::splitString(const std::string &str,
-		char delimiter)
-{
-	std::stringstream ss(str);
-	std::string token;
-	std::list<std::string> tokens;
-	while (getline(ss, token, delimiter))
-	{
-		tokens.push_back(token);
-	}
-	return tokens;
 }
 
 void XMLParser::setAttributes(const std::string &str)

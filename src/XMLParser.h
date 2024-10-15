@@ -43,7 +43,6 @@ private:
 	void setDocumentRoot();
 	void handleClosingTag();
 	void handleMetaData();
-	std::list<std::string> splitString(const std::string &str, char delimiter);
 	std::map<std::string, std::string> extractAttrKeyValuePairs(
 			const std::string &str);
 };

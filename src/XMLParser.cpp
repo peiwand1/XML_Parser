@@ -14,34 +14,45 @@
 XMLParser::XMLParser() :
 		doc(), parentOrder(), isInsideElement(false), readStr("")
 {
-
 }
 
 XMLParser::~XMLParser()
 {
 }
 
-void XMLParser::parse(const std::string &fileName)
+void XMLParser::parse(const std::string &fileName, std::size_t bufferSize)
 {
 	std::ifstream file;
 
 	file.open(fileName);
-	if (file.is_open())
+	if (!file.is_open())
 	{
-		char c;
-		std::string readStr = "";
-
-		while (file.get(c))
-		{
-			//read char by char to determine what it is
-			parseByChar(c);
-		}
-
-		file.close();
+		throw std::runtime_error("Unable to open file: " + fileName);
 	}
-	else
+
+	// read a buffer of chars from file
+	std::vector<char> buffer(bufferSize);
+	while (file.read(buffer.data(), bufferSize))
 	{
-		throw std::runtime_error("Unable to open file");
+		std::streamsize bytesRead = file.gcount();
+		processChunk(std::string(buffer.data(), bytesRead));
+	}
+
+	// Process any remaining data (if less than bufferSize was read)
+	if (file.gcount() > 0)
+	{
+		processChunk(std::string(buffer.data(), file.gcount()));
+	}
+
+	file.close();
+}
+
+void XMLParser::processChunk(const std::string &buffer)
+{
+	// read through buffer by char
+	for (const char& c: buffer)
+	{
+		parseByChar(c);
 	}
 }
 

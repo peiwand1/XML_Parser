@@ -26,7 +26,7 @@ public:
 	 * starts processing a given file to interpret it's XML content
 	 * @param fileName
 	 */
-	void parse(const std::string& fileName);
+	void parse(const std::string& fileName, std::size_t bufferSize = 4096);
 
 	/**
 	 * prints the XML tree
@@ -50,6 +50,12 @@ private:
 	 * tracks the text that is currently being parsed
 	 */
 	std::string readStr;
+
+	/**
+	 *
+	 * @param buffer
+	 */
+    void processChunk(const std::string& buffer);
 
 	/**
 	 * receives chars one by one from the file and decides what action should be taken to parse it

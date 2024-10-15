@@ -11,9 +11,6 @@
 XMLElement::XMLElement(std::string aName) :
 		name(aName), textContent(""), attributes(), parent(nullptr), children()
 {
-	// TODO Auto-generated constructor stub
-//	std::cout << __PRETTY_FUNCTION__ << " " << name << std::endl;
-
 }
 
 XMLElement::XMLElement(const XMLElement &anXMLObj) :
@@ -23,8 +20,17 @@ XMLElement::XMLElement(const XMLElement &anXMLObj) :
 				parent(anXMLObj.parent),
 				children(anXMLObj.children)
 {
-	// TODO use getters instead of directly accessing values
+}
 
+XMLElement::XMLElement(XMLElement &&other) :
+				name(std::move(other.name)),
+				textContent(std::move(other.textContent)),
+				attributes(std::move(other.attributes)),
+				parent(other.parent),
+				children(std::move(other.children))
+{
+	other.parent = nullptr;
+	other.children.clear();
 }
 
 XMLElement::~XMLElement()
@@ -103,7 +109,29 @@ XMLElement& XMLElement::operator=(const XMLElement &other)
 {
 	if (this != &other)
 	{
-		//TODO data = other.data;
+		name = other.name;
+		textContent = other.textContent;
+		attributes = other.attributes;
+		parent = other.parent;
+		children = other.children;
 	}
+	return *this;
+}
+
+XMLElement& XMLElement::operator=(XMLElement &&other)
+{
+	if (this != &other)
+	{
+		name = std::move(other.name);
+		textContent = std::move(other.textContent);
+		attributes = std::move(other.attributes);
+
+		parent = other.parent;
+		children = std::move(other.children);
+
+		other.parent = nullptr;
+		other.children.clear();
+	}
+
 	return *this;
 }

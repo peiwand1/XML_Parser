@@ -31,7 +31,6 @@ XMLElement::XMLElement(XMLElement &&other) noexcept :
 {
 	other.parent = nullptr;
 	other.children.clear();
-	other.attributes.clear();
 }
 
 XMLElement::~XMLElement()

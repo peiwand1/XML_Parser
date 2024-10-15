@@ -21,7 +21,7 @@ XMLParser::~XMLParser()
 {
 }
 
-void XMLParser::parse(std::string fileName)
+void XMLParser::parse(const std::string &fileName)
 {
 	std::ifstream file;
 
@@ -56,7 +56,9 @@ void XMLParser::parseByChar(char c)
 			if (parentOrder.size() > 0
 					&& !std::all_of(readStr.begin(), readStr.end(), isspace))
 			{
-				// TODO replace line endings with LF (omit CR if it's there)
+				// remove CR from line endings before setting textcontent, XML only uses LF
+				readStr.erase(std::remove(readStr.begin(), readStr.end(), '\r'),
+						readStr.end());
 				parentOrder.back()->setTextContent(readStr);
 			}
 			isInsideElement = true;
@@ -88,25 +90,28 @@ void XMLParser::parseByChar(char c)
 
 void XMLParser::handleXMLInside()
 {
+	if (std::isspace(readStr.front()))
+	{
+		throw std::runtime_error("XML Element can't start with whitespace");
+	}
+
 	if (readStr.front() == '/') // closing tag </name>
 	{
 		handleClosingTag();
-		return;
 	}
-
-	if (readStr.front() == '?') // prolog
+	else if (readStr.front() == '?') // prolog
 	{
 		handleMetaData();
-		return;
 	}
-
-	if (readStr.front() == '!') // comment
+	else if (readStr.front() == '!') // comment
 	{
 		handleComment();
-		return;
 	}
+	else
+	{
 
-	handleXMLElement();
+		handleXMLElement();
+	}
 }
 
 void XMLParser::handleClosingTag()
@@ -118,8 +123,11 @@ void XMLParser::handleClosingTag()
 	}
 	else
 	{
-		// TODO throw exception, closing tag had different name than opening tag
-		//throw "Closing tag '" + parentOrder.back()->getName() + "' expected inplace of '" + readStr.substr(1, readStr.size()-1) + "'";
+		// throw exception, closing tag had different name than opening tag
+		throw std::runtime_error(
+				"Closing tag '" + parentOrder.back()->getName()
+						+ "' expected inplace of '"
+						+ readStr.substr(1, readStr.size() - 1) + "'");
 	}
 }
 
@@ -132,9 +140,6 @@ void XMLParser::handleMetaData()
 		std::string attrStr = readStr.substr(5);
 		std::map<std::string, std::string> attributes =
 				extractAttrKeyValuePairs(attrStr);
-
-//		std::cout << attributes.at("version") << std::endl;
-//		std::cout << attributes.at("encoding") << std::endl;
 
 		auto pos = attributes.find("version");
 		if (pos != attributes.end())
@@ -150,7 +155,8 @@ void XMLParser::handleMetaData()
 	}
 	else
 	{
-		// TODO throw exception, formatting wrong
+		// throw exception, formatting wrong
+		throw std::runtime_error("Metadata found, but syntax was wrong.");
 	}
 }
 
@@ -169,7 +175,9 @@ void XMLParser::handleComment()
 			if (c == '-' && firstDash)
 			{
 				// found 2 dashes in a row
-				// TODO throw, can't have -- in comment
+				// throw, can't have -- in comment
+				throw std::runtime_error(
+						"Double dashes found in comment, this is not allowed");
 			}
 			else if (c == '-')
 			{
@@ -184,6 +192,7 @@ void XMLParser::handleComment()
 	else
 	{
 		// TODO throw exception, formatting wrong
+		throw std::runtime_error("Comment not formatted correctly");
 	}
 }
 

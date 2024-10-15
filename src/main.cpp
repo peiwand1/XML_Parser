@@ -10,14 +10,14 @@
 
 int main(int argc, char **argv)
 {
-	XMLParser parser;
-
 	try
 	{
+		XMLParser parser;
 		parser.parse("XML.txt");
-	} catch (const std::exception& e)
+
+		parser.print();
+	} catch (const std::exception &e)
 	{
 		std::cerr << e.what() << std::endl;
 	}
-	parser.print();
 }

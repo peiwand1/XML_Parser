@@ -22,7 +22,7 @@ public:
 	XMLParser();
 	virtual ~XMLParser();
 
-	void parse(std::string fileName);
+	void parse(const std::string& fileName);
 	void print();
 private:
 	XMLDocument doc;

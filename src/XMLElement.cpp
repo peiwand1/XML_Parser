@@ -22,7 +22,7 @@ XMLElement::XMLElement(const XMLElement &anXMLObj) :
 {
 }
 
-XMLElement::XMLElement(XMLElement &&other) :
+XMLElement::XMLElement(XMLElement &&other) noexcept :
 				name(std::move(other.name)),
 				textContent(std::move(other.textContent)),
 				attributes(std::move(other.attributes)),
@@ -31,6 +31,7 @@ XMLElement::XMLElement(XMLElement &&other) :
 {
 	other.parent = nullptr;
 	other.children.clear();
+	other.attributes.clear();
 }
 
 XMLElement::~XMLElement()
@@ -117,7 +118,7 @@ XMLElement& XMLElement::operator=(const XMLElement &other)
 	return *this;
 }
 
-XMLElement& XMLElement::operator=(XMLElement &&other)
+XMLElement& XMLElement::operator=(XMLElement &&other) noexcept
 {
 	if (this != &other)
 	{

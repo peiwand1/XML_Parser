@@ -33,7 +33,7 @@ public:
 	 * move constructor
 	 * @param anXMLObj
 	 */
-	XMLElement(XMLElement &&anXMLObj);
+	XMLElement(XMLElement &&anXMLObj) noexcept;
 
 	virtual ~XMLElement();
 
@@ -93,7 +93,7 @@ public:
 	 * @param other
 	 * @return
 	 */
-	XMLElement& operator=(XMLElement&& other);
+	XMLElement& operator=(XMLElement&& other) noexcept;
 private:
 	std::string name;
 	std::string textContent;

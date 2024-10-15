@@ -6,7 +6,6 @@
  */
 
 #include "XMLParser.h"
-#include <list>
 #include <iostream>
 #include <fstream>
 #include <algorithm>
@@ -94,40 +93,20 @@ void XMLParser::handleXMLInside()
 		handleClosingTag();
 		return;
 	}
-	else if (readStr.front() == '?') // prolog
+
+	if (readStr.front() == '?') // prolog
 	{
 		handleMetaData();
 		return;
 	}
-	else if (readStr.front() == '!') // comment
+
+	if (readStr.front() == '!') // comment
 	{
-		// TODO check if comment syntax is accurate
+		handleComment();
 		return;
 	}
 
-	// isolate element name from string
-	std::string name = readStr;
-	std::string attr = "";
-	auto pos = readStr.find(' ');
-	if (pos != std::string::npos)
-	{
-		name = readStr.substr(0, pos);
-		attr = readStr.substr(pos + 1); // +1 to skip the space char
-	}
-
-	parentOrder.push_back(new XMLElement(name));
-
-	setParentChildRelations();
-	if (attr.size() > 0)
-	{
-		setAttributes(attr);
-	}
-	setDocumentRoot();
-
-	if (readStr.back() == '/')
-	{
-		parentOrder.pop_back(); // empty tag <name />
-	}
+	handleXMLElement();
 }
 
 void XMLParser::handleClosingTag()
@@ -172,6 +151,67 @@ void XMLParser::handleMetaData()
 	else
 	{
 		// TODO throw exception, formatting wrong
+	}
+}
+
+void XMLParser::handleComment()
+{
+	// check if tag starts and ends with correct symbols
+	if (readStr.substr(0, 3) == "!--"
+			&& readStr.substr(readStr.size() - 2) == "--")
+	{
+		// comment can't have 2 dashes in the middle, skip dashes at start and end
+		bool firstDash = false;
+		for (std::size_t i = 3; i < readStr.size() - 2; ++i)
+		{
+			char c = readStr[i];
+
+			if (c == '-' && firstDash)
+			{
+				// found 2 dashes in a row
+				// TODO throw, can't have -- in comment
+			}
+			else if (c == '-')
+			{
+				firstDash = true;
+			}
+			else
+			{
+				firstDash = false;
+			}
+		}
+	}
+	else
+	{
+		// TODO throw exception, formatting wrong
+	}
+}
+
+void XMLParser::handleXMLElement()
+{
+	// separate element name from attributes
+	std::string name = readStr;
+	std::string attr = "";
+	auto pos = readStr.find(' ');
+	if (pos != std::string::npos)
+	{
+		name = readStr.substr(0, pos);
+		attr = readStr.substr(pos + 1); // +1 to skip the space char
+	}
+
+	parentOrder.push_back(new XMLElement(name));
+
+	setParentChildRelations();
+	if (attr.size() > 0)
+	{
+		setAttributes(attr);
+	}
+	setDocumentRoot();
+
+	// if '/' at end, that doubles as a closing tag
+	if (readStr.back() == '/')
+	{
+		parentOrder.pop_back(); // empty tag <name />
 	}
 }
 

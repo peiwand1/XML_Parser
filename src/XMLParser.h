@@ -14,7 +14,7 @@
 #include "XMLElement.h"
 #include <string>
 #include <vector>
-#include <list>
+#include <map>
 
 class XMLParser
 {
@@ -43,6 +43,8 @@ private:
 	void setDocumentRoot();
 	void handleClosingTag();
 	void handleMetaData();
+	void handleComment();
+	void handleXMLElement();
 	std::map<std::string, std::string> extractAttrKeyValuePairs(
 			const std::string &str);
 };

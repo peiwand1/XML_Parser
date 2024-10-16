@@ -34,8 +34,7 @@ void XMLParser::parse(const std::string &fileName, std::size_t bufferSize)
 	std::vector<char> buffer(bufferSize);
 	while (file.read(buffer.data(), bufferSize))
 	{
-		std::streamsize bytesRead = file.gcount();
-		processChunk(std::string(buffer.data(), bytesRead));
+		processChunk(std::string(buffer.data(), file.gcount()));
 	}
 
 	// process any remaining data (if less than bufferSize was read)

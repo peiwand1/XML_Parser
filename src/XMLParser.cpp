@@ -12,7 +12,7 @@
 #include <sstream>
 
 XMLParser::XMLParser() :
-		doc(), parentOrder(), isInsideElement(false), readStr("")
+		doc(), parentDepthOrder(), isInsideElement(false), readStr("")
 {
 }
 
@@ -57,44 +57,38 @@ void XMLParser::processChunk(const std::string &buffer)
 
 void XMLParser::parseByChar(char c)
 {
-	// handle char based on whether the text is inside or outside <> brackets
-	if (!isInsideElement)
-	{
-		if (c == '<') // start of tag found
-		{
-			// check if the root xml element has been made and the read text isn't just whitespace
-			if (parentOrder.size() > 0
-					&& !std::all_of(readStr.begin(), readStr.end(), isspace))
-			{
-				// remove CR from line endings before setting textcontent, XML only uses LF
-				readStr.erase(std::remove(readStr.begin(), readStr.end(), '\r'),
-						readStr.end());
-				parentOrder.back()->setTextContent(readStr);
-			}
-			isInsideElement = true;
-			readStr = "";
-		}
-		else
-		{
-			// look for text between open and close tags
-			readStr += c;
-		}
-	}
-	else
-	{
-		if (c == '>')
-		{
-			isInsideElement = false;
 
-			handleXMLInside();
-			// reset tagName
-			readStr = "";
-		}
-		else
-		{
-			// read text that is between < > brackets
-			readStr += c;
-		}
+	if (!isInsideElement && c == '<')
+	{
+		handleXMLOutside();
+		isInsideElement = true;
+		readStr = "";
+		return;
+	}
+
+	if (isInsideElement && c == '>')
+	{
+		handleXMLInside();
+		isInsideElement = false;
+		readStr = "";
+		return;
+	}
+
+	readStr += c;
+
+}
+
+void XMLParser::handleXMLOutside()
+{
+	// check if the root xml element has been made and the read text isn't just whitespace
+	// any text found before the root element cannot be attributed to an XML element
+	if (parentDepthOrder.size() > 0
+			&& !std::all_of(readStr.begin(), readStr.end(), isspace))
+	{
+		// remove CR from line endings before setting textcontent, XML only uses LF
+		readStr.erase(std::remove(readStr.begin(), readStr.end(), '\r'),
+				readStr.end());
+		parentDepthOrder.back()->setTextContent(readStr);
 	}
 }
 
@@ -106,144 +100,138 @@ void XMLParser::handleXMLInside()
 				"XML Element can't start with whitespace: " + readStr);
 	}
 
-	if (readStr.front() == '/') // closing tag </name>
+	switch (readStr.front())
 	{
+	case '/':
 		handleClosingTag();
-	}
-	else if (readStr.front() == '?') // prolog
-	{
+		break;
+	case '?':
 		handleMetaData();
-	}
-	else if (readStr.front() == '!') // comment
-	{
+		break;
+	case '!':
 		handleComment();
-	}
-	else
-	{
+		break;
+	default:
 		handleXMLElement();
+		break;
 	}
 }
 
 void XMLParser::handleClosingTag()
 {
-	// check if name matches that of latest parent in order
-	if (readStr.substr(1, readStr.size() - 1) == parentOrder.back()->getName())
-	{
-		parentOrder.pop_back();
-	}
-	else
+	// check if name matches that of the opening tag
+	if (readStr.substr(1, readStr.size() - 1) != parentDepthOrder.back()->getName())
 	{
 		// throw exception, closing tag had different name than opening tag
 		throw std::runtime_error(
-				"Closing tag '" + parentOrder.back()->getName()
+				"Closing tag '" + parentDepthOrder.back()->getName()
 						+ "' expected inplace of '"
 						+ readStr.substr(1, readStr.size() - 1) + "'");
 	}
+
+	// remove last element of list as it is now closed and cannot have any child elements
+	parentDepthOrder.pop_back();
 }
 
 void XMLParser::handleMetaData()
 {
 	// check if tag starts and ends with correct symbols
-	if (readStr.substr(0, 4) == "?xml" && readStr.back() == '?')
-	{
-		// split "?xml " from string
-		std::string attrStr = readStr.substr(5);
-		std::map<std::string, std::string> attributes =
-				extractAttrKeyValuePairs(attrStr);
-
-		auto pos = attributes.find("version");
-		if (pos != attributes.end())
-		{
-			// warning relating to program functionality
-			if (attributes.at("version") != "1.0")
-			{
-				std::cerr
-						<< "Warning: program is only intended to work with XML 1.0, results might be unexpected"
-						<< std::endl;
-			}
-			doc.setVersion(attributes.at("version"));
-		}
-
-		pos = attributes.find("encoding");
-		if (pos != attributes.end())
-		{
-			// warning relating to program functionality
-			if (attributes.at("encoding") != "UTF-8")
-			{
-				std::cerr
-						<< "Warning: program is only intended to work with UTF-8 encoding, results might be unexpected"
-						<< std::endl;
-			}
-			doc.setEncoding(attributes.at("encoding"));
-		}
-	}
-	else
+	if (readStr.substr(0, 4) != "?xml" || readStr.back() != '?')
 	{
 		// throw exception, formatting wrong
 		throw std::runtime_error(
 				"Metadata found, but syntax was wrong: " + readStr);
+	}
+
+	// split "?xml " from string
+	std::string attrStr = readStr.substr(5);
+	std::map<std::string, std::string> attributes = extractAttrKeyValuePairs(
+			attrStr);
+
+	if (attributes.find("version") != attributes.end())
+	{
+		// warning relating to program functionality
+		if (attributes.at("version") != "1.0")
+		{
+			std::cerr
+					<< "Warning: program is only intended to work with XML 1.0, results might be unexpected"
+					<< std::endl;
+		}
+		doc.setVersion(attributes.at("version"));
+	}
+
+	if (attributes.find("encoding") != attributes.end())
+	{
+		// warning relating to program functionality
+		if (attributes.at("encoding") != "UTF-8")
+		{
+			std::cerr
+					<< "Warning: program is only intended to work with UTF-8 encoding, results might be unexpected"
+					<< std::endl;
+		}
+		doc.setEncoding(attributes.at("encoding"));
 	}
 }
 
 void XMLParser::handleComment()
 {
 	// check if tag starts and ends with correct symbols
-	if (readStr.substr(0, 3) == "!--"
-			&& readStr.substr(readStr.size() - 2) == "--")
-	{
-		// comment can't have 2 dashes in the middle, skip dashes at start and end
-		bool firstDash = false;
-		for (std::size_t i = 3; i < readStr.size() - 2; ++i)
-		{
-			char c = readStr[i];
-
-			if (c == '-' && firstDash)
-			{
-				// found 2 dashes in a row
-				// throw, can't have -- in comment
-				throw std::runtime_error(
-						"Double dashes found in comment, this is not allowed: "
-								+ readStr);
-			}
-			else if (c == '-')
-			{
-				firstDash = true;
-			}
-			else
-			{
-				firstDash = false;
-			}
-		}
-	}
-	else
+	if (readStr.substr(0, 3) != "!--"
+			|| readStr.substr(readStr.size() - 2) != "--")
 	{
 		// throw exception, formatting wrong
 		throw std::runtime_error("Comment not formatted correctly: " + readStr);
+	}
+
+	// comment can't have 2 dashes in the middle, skip dashes at start and end
+	bool firstDash = false;
+	for (std::size_t i = 3; i < readStr.size() - 2; ++i)
+	{
+		char c = readStr[i];
+
+		if (c == '-' && firstDash)
+		{
+			// found 2 dashes in a row
+			// throw, can't have -- in comment
+			throw std::runtime_error(
+					"Double dashes found in comment, this is not allowed: "
+							+ readStr);
+		}
+		else if (c == '-')
+		{
+			firstDash = true;
+		}
+		else
+		{
+			firstDash = false;
+		}
 	}
 }
 
 void XMLParser::checkNameLegality(std::string &name)
 {
-	std::string illegalStartChars = "-.1234567890"; // chars that a name can't start with
-	auto pos = illegalStartChars.find(name.front());
-	if (pos != std::string::npos)
+	// chars that a name can't start with
+	std::string illegalStartChars = "-.1234567890";
+	auto posIllegalStartChar = illegalStartChars.find(name.front());
+	if (posIllegalStartChar != std::string::npos)
 	{
 		// first char is '-', '.' or a digit
 		throw std::runtime_error(
 				"name: " + name + " starts with an illegal character '"
-						+ illegalStartChars.at(pos) + "'");
+						+ illegalStartChars.at(posIllegalStartChar) + "'");
 	}
 
-	std::string illegalNameChars = "!\"#$%&'()*+,/;<=>?@[\\]^`{|}~"; // chars that can't be used in name
+	// chars that can't be used in name
+	std::string illegalNameChars = "!\"#$%&'()*+,/;<=>?@[\\]^`{|}~";
 	for (char c : name)
 	{
-		pos = illegalNameChars.find(c);
-		if (pos != std::string::npos)
+		auto posIllegalNameChar = illegalNameChars.find(c);
+		if (posIllegalNameChar != std::string::npos)
 		{
 			//contains illegal char
 			throw std::runtime_error(
 					"name: " + name + " contains an illegal character '"
-							+ illegalNameChars.at(pos) + "'");
+							+ illegalNameChars.at(posIllegalNameChar) + "'");
 		}
 	}
 }
@@ -261,7 +249,8 @@ void XMLParser::handleXMLElement()
 	}
 	checkNameLegality(name);
 
-	parentOrder.push_back(new XMLElement(name));
+	// add new XMLElement to back of depth list
+	parentDepthOrder.push_back(new XMLElement(name));
 
 	setParentChildRelations();
 	if (attr.size() > 0)
@@ -273,16 +262,16 @@ void XMLParser::handleXMLElement()
 	// if '/' at end, that doubles as a closing tag
 	if (readStr.back() == '/')
 	{
-		parentOrder.pop_back(); // empty tag <name />
+		parentDepthOrder.pop_back(); // empty tag <name />
 	}
 }
 
 void XMLParser::setParentChildRelations()
 {
-	if (parentOrder.size() > 1)
+	if (parentDepthOrder.size() > 1)
 	{
-		XMLElement *parent = parentOrder.at(parentOrder.size() - 2); // second to last item
-		XMLElement *child = parentOrder.back(); // last item
+		XMLElement *parent = parentDepthOrder.at(parentDepthOrder.size() - 2); // second to last item
+		XMLElement *child = parentDepthOrder.back(); // last item
 
 		parent->addChild(child);
 		child->setParent(parent);
@@ -300,7 +289,7 @@ void XMLParser::setAttributes(const std::string &str)
 
 	for (const auto &kv : attributes)
 	{
-		parentOrder.back()->addAttribute(kv.first, kv.second);
+		parentDepthOrder.back()->addAttribute(kv.first, kv.second);
 	}
 }
 
@@ -308,7 +297,7 @@ void XMLParser::setDocumentRoot()
 {
 	if (doc.getRoot() == nullptr) // will only happen when the first XML element is found
 	{
-		doc.setRoot(parentOrder.front());
+		doc.setRoot(parentDepthOrder.front());
 	}
 }
 
@@ -328,6 +317,7 @@ std::map<std::string, std::string> XMLParser::extractAttrKeyValuePairs(
 		{
 			continue;
 		}
+
 		if (inName)
 		{
 			if (c == '=')

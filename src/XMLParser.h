@@ -39,7 +39,7 @@ private:
 	 * keeps track of order that XML objects are found in,
 	 * once it's closing tag is found it is removed from the list
 	 */
-	std::vector<XMLElement*> parentOrder;
+	std::vector<XMLElement*> parentDepthOrder;
 
 	/**
 	 * tracks if parser is in or outside of <> brackets
@@ -62,6 +62,11 @@ private:
 	 * @param c
 	 */
 	void parseByChar(char c);
+
+	/**
+	 * handles the text found outside <> brackets
+	 */
+	void handleXMLOutside();
 
 	/**
 	 * handles the various cases inside <> brackets

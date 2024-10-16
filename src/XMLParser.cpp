@@ -58,12 +58,12 @@ void XMLParser::processChunk(const std::string &buffer)
 
 void XMLParser::parseByChar(char c)
 {
-	//read char by char to determine what it is
+	// handle char based on whether the text is inside or outside <> brackets
 	if (!isInsideElement)
 	{
 		if (c == '<') // start of tag found
 		{
-			//check if the root xml element has been made and the read text isn't just whitespace
+			// check if the root xml element has been made and the read text isn't just whitespace
 			if (parentOrder.size() > 0
 					&& !std::all_of(readStr.begin(), readStr.end(), isspace))
 			{
@@ -77,7 +77,7 @@ void XMLParser::parseByChar(char c)
 		}
 		else
 		{
-			// look for text between open and close tags,
+			// look for text between open and close tags
 			readStr += c;
 		}
 	}
